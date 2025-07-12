@@ -1,0 +1,38 @@
+.data
+linha: .asciz "\n"
+
+.text
+.globl _start
+
+_start:
+    li a7, 5
+    ecall
+    
+    bne a0, x0, nao_zero
+    li t0, 32
+    j fim
+
+nao_zero:
+    li t0, 0
+    li t1, 1
+    li t2, 31
+
+laco:
+    sll t3, t1, t2
+    and t4, a0, t3
+    bne t4, x0, fim
+    addi t0, t0, 1
+    addi t2, t2, -1
+    bge t2, x0, laco
+
+fim:
+    li a7, 1
+    mv a0, t0
+    ecall
+
+    la a0, linha
+    li a7, 4
+    ecall
+
+    li a7, 10
+    ecall

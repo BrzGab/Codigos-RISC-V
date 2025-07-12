@@ -1,0 +1,170 @@
+.data
+    msg_invalida:    .string "Entradas invalidas.\n"
+    msg_nao_primo:   .string "O modulo nao eh primo.\n"
+    msg_resultado1:  .string "A exponencial modular "
+    msg_resultado2:  .string " elevado a "
+    msg_resultado3:  .string " (mod "
+    msg_resultado4:  .string ") eh "
+    msg_resultado5:  .string ".\n"
+.text
+.globl _start
+_start:
+    # lenndo N1
+    li a7, 5
+    ecall
+    mv s0, a0
+    
+    # lendo N2
+    li a7, 5
+    ecall
+    mv s1, a0
+    
+    #lendo N3
+    li a7, 5
+    ecall
+    mv s2, a0
+    
+    #verificar intervalos
+    blez s0, entrada_invalida
+    blez s1, entrada_invalida
+    blez s2, entrada_invalida
+    
+    li t0, 65535
+    bgt s0, t0, entrada_invalida
+    bgt s1, t0, entrada_invalida
+    bgt s2, t0, entrada_invalida
+    
+    #verificar se N3 é primo
+    mv a0, s2
+    jal eh_primo
+    beqz a0, modulo_nao_primo
+    
+    #calcular exponenciacao modular
+    mv a0, s0
+    mv a1, s1
+    mv a2, s2
+    jal exp_modular
+    mv s3, a0
+    
+    #imprimir resultado
+    li a7, 4
+    la a0, msg_resultado1
+    ecall
+    
+    li a7, 1
+    mv a0, s0
+    ecall
+    
+    li a7, 4
+    la a0, msg_resultado2
+    ecall
+    
+    li a7, 1
+    mv a0, s1
+    ecall
+    
+    li a7, 4
+    la a0, msg_resultado3
+    ecall
+    
+    li a7, 1
+    mv a0, s2
+    ecall
+    
+    li a7, 4
+    la a0, msg_resultado4
+    ecall
+    
+    li a7, 1
+    mv a0, s3
+    ecall
+    
+    li a7, 4
+    la a0, msg_resultado5
+    ecall
+    
+    j fim
+entrada_invalida:
+    li a7, 4
+    la a0, msg_invalida
+    ecall
+    j fim
+modulo_nao_primo:
+    li a7, 4
+    la a0, msg_nao_primo
+    ecall
+fim:
+    li a7, 10
+    ecall
+eh_primo:
+    li t0, 1
+    beq a0, t0, nao_primo
+    li t0, 2
+    beq a0, t0, primo
+    
+    li t1, 2
+loop_primo:
+    mul t2, t1, t1
+    bgt t2, a0, primo
+    
+    rem t3, a0, t1
+    beqz t3, nao_primo
+    
+    addi t1, t1, 1
+    j loop_primo
+primo:
+    li a0, 1
+    ret
+nao_primo:
+    li a0, 0
+    ret
+exp_modular:
+    li t0, 1
+    rem a0, a0, a2
+    
+loop_exp:
+    beqz a1, fim_exp
+    
+    andi t1, a1, 1
+    beqz t1, pula_mult
+    
+    mv t3, t0
+    mv t4, a0
+    li t5, 0
+mult_loop1:
+    beqz t4, fim_mult1
+    andi t6, t4, 1
+    beqz t6, skip1
+    add t5, t5, t3
+    rem t5, t5, a2
+skip1:
+    add t3, t3, t3
+    rem t3, t3, a2
+    srli t4, t4, 1
+    j mult_loop1
+fim_mult1:
+    mv t0, t5
+    
+pula_mult:
+    mv t3, a0
+    mv t4, a0
+    li t5, 0
+mult_loop2:
+    beqz t4, fim_mult2
+    andi t6, t4, 1
+    beqz t6, skip2
+    add t5, t5, t3
+    rem t5, t5, a2
+skip2:
+    add t3, t3, t3
+    rem t3, t3, a2
+    srli t4, t4, 1
+    j mult_loop2
+fim_mult2:
+    mv a0, t5
+    
+    srli a1, a1, 1
+    j loop_exp
+fim_exp:
+    mv a0, t0
+    ret

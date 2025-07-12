@@ -1,0 +1,151 @@
+# trabalho 4.2 fac - OTP
+.data
+chave_hex: .space 65
+mensagem: .space 33
+chave_bin: .space 32
+cifrado: .space 32
+saida_hex: .space 65
+hex_chars: .asciz "0123456789abcdef"
+
+.text
+.globl main
+
+main:
+    li a7, 8
+    la a0, chave_hex
+    li a1, 65
+    ecall
+    la t0, chave_hex
+limpa_chave:
+    lbu t1, 0(t0)
+    beqz t1, fim_limpa
+    li t2, 10
+    beq t1, t2, achou_nl
+    addi t0, t0, 1
+    j limpa_chave
+achou_nl:
+    sb zero, 0(t0)
+fim_limpa:
+    li a7, 8
+    la a0, mensagem
+    li a1, 33
+    ecall
+    
+    la a0, chave_hex
+    la a1, chave_bin
+    jal hex_para_bin
+    
+    la s0, mensagem
+    la s1, chave_bin
+    la s2, cifrado
+    li s3, 0
+cifrar_loop:
+    lbu t0, 0(s0)
+    beqz t0, fim_cifra
+    li t1, 10
+    beq t0, t1, fim_cifra
+    
+    lbu t1, 0(s1)
+    xor t2, t0, t1
+    xori t2, t2, 0xff
+    sb t2, 0(s2)
+    addi s0, s0, 1
+    addi s1, s1, 1
+    addi s2, s2, 1
+    addi s3, s3, 1
+    
+    j cifrar_loop
+    
+fim_cifra:
+    la a0, cifrado
+    la a1, saida_hex
+    mv a2, s3
+    jal bin_para_hex
+    
+    li a7, 4
+    la a0, saida_hex
+    ecall
+    
+    li a7, 11
+    li a0, 10
+    ecall
+    
+    li a7, 10
+    ecall
+
+hex_char_para_valor:
+    li t5, 57
+    ble a0, t5, eh_digito
+    li t5, 70
+    ble a0, t5, eh_maiuscula
+    addi a0, a0, -87
+    ret
+eh_maiuscula:
+    addi a0, a0, -55
+    ret
+eh_digito:
+    addi a0, a0, -48
+    ret
+
+hex_para_bin:
+    mv s4, ra
+    mv t0, a0
+    mv t1, a1
+    
+hex_loop:
+    lbu t2, 0(t0)
+    li t3, 10
+    beq t2, t3, hex_fim
+    beqz t2, hex_fim
+    
+    lbu t3, 1(t0)
+    li t4, 10
+    beq t3, t4, hex_fim
+    beqz t3, hex_fim
+    
+    mv a0, t2
+    jal hex_char_para_valor
+    mv t2, a0
+    slli t2, t2, 4
+    
+    mv a0, t3
+    jal hex_char_para_valor
+    mv t3, a0
+    
+    or t2, t2, t3
+    sb t2, 0(t1)
+    
+    addi t0, t0, 2
+    addi t1, t1, 1
+    j hex_loop
+    
+hex_fim:
+    mv ra, s4
+    ret
+bin_para_hex:
+    mv t0, a0
+    mv t1, a1
+    mv t2, a2  
+bin_hex_loop:
+    beqz t2, bin_hex_fim
+    
+    lbu t3, 0(t0)
+    
+    srli t4, t3, 4
+    la t5, hex_chars
+    add t4, t5, t4
+    lbu t4, 0(t4)
+    sb t4, 0(t1)
+    
+    andi t3, t3, 0xf
+    add t3, t5, t3
+    lbu t3, 0(t3)
+    sb t3, 1(t1)
+    
+    addi t0, t0, 1
+    addi t1, t1, 2
+    addi t2, t2, -1
+    j bin_hex_loop  
+bin_hex_fim:
+    sb zero, 0(t1)
+    ret

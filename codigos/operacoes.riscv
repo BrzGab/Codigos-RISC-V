@@ -1,0 +1,157 @@
+.data
+adicao: .asciz "ADD: "
+subtracao: .asciz "SUB: "
+e: .asciz "AND: "
+o: .asciz "OR: "
+xo: .asciz "XOR: "
+ai: .asciz "MASK: "
+esq: .asciz "SLL("
+dir: .asciz "SRL("
+parentese_meio: .asciz "): "
+linha: .asciz "\n"
+
+.text
+# entrada 1
+li a7, 5
+ecall
+mv t0, a0
+
+# entrada 2  
+li a7, 5
+ecall
+mv t1, a0
+
+# entrada 3
+li a7, 5
+ecall
+mv t2, a0
+
+# operacoes
+add s1, t0, t1
+sub s2, t0, t1
+and s3, t0, t1
+or s4,t0,t1
+xor s5,t0,t1
+andi s6,t2,31
+sll s7, t0, s6
+srl s8, t1, s6
+
+# print da soma
+li a7, 4
+la a0, adicao
+ecall
+
+li a7, 1
+mv a0, s1
+ecall
+
+li a7, 4
+la a0, linha
+ecall
+
+# print da subtracao
+li a7, 4
+la a0, subtracao
+ecall
+
+li a7, 1
+mv a0, s2
+ecall
+
+li a7, 4
+la a0, linha
+ecall
+
+# print da AND
+li a7, 4
+la a0, e
+ecall
+
+li a7, 1
+mv a0, s3
+ecall
+
+li a7,4
+la a0, linha
+ecall
+
+# print do OR
+li a7, 4
+la a0, o
+ecall
+
+li a7, 1
+mv a0, s4
+ecall
+
+li a7,4
+la a0, linha
+ecall
+
+# print do XOR
+li a7, 4
+la a0, xo
+ecall
+
+li a7, 1
+mv a0, s5
+ecall
+
+li a7,4
+la a0, linha
+ecall
+
+# print do ANDI com o 31
+li a7, 4
+la a0, ai
+ecall
+
+li a7, 1
+mv a0, s6
+ecall
+
+li a7,4
+la a0, linha
+ecall
+
+# print do descolamento esquerda
+li a7, 4
+la a0, esq
+ecall
+
+li a7, 1
+mv a0, s6
+ecall
+
+li a7, 4
+la a0, parentese_meio
+ecall
+
+li a7, 1
+mv a0, s7
+ecall
+
+li a7,4
+la a0, linha
+ecall
+
+# print do ANDI com o 31
+li a7, 4
+la a0, dir
+ecall
+
+li a7, 1
+mv a0, s6
+ecall
+
+li a7, 4
+la a0, parentese_meio
+ecall
+
+li a7, 1
+mv a0, s8
+ecall
+
+li a7,4
+la a0, linha
+ecall

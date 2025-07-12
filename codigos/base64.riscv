@@ -1,0 +1,134 @@
+#trabalho 4.1 - fac - base64
+
+.data
+entrada: .space 49          # isso é para entrada
+saida: .space 97      
+tabela_b64: .asciz "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+hex_chars: .asciz "0123456789abcdef"
+nova_linha: .byte 10
+
+.text
+.globl main
+
+main:
+#ler entrada
+    li a7, 8
+    la a0, entrada
+    li a1, 49
+    ecall
+#Inicializar registradores
+    la s0, entrada    
+    la s1, saida          
+    li s2, 0            
+processar_blocos:
+# carregar 4 caracteres base64
+    lbu t0, 0(s0)
+    beqz t0, fim_processamento
+    li t1, 10
+    beq t0, t1, fim_processamento
+    lbu t1, 1(s0)
+    lbu t2, 2(s0)
+    lbu t3, 3(s0)
+# converter para indices
+    mv a0, t0
+    jal obter_indice_b64
+    mv t0, a0
+    
+    mv a0, t1
+    jal obter_indice_b64
+    mv t1, a0
+    
+    mv a0, t2
+    jal obter_indice_b64
+    mv t2, a0
+    
+    mv a0, t3
+    jal obter_indice_b64
+    mv t3, a0
+    
+# combinar bits (6 bits cada)
+    slli t0, t0, 18
+    slli t1, t1, 12
+    slli t2, t2, 6
+    or t4, t0, t1
+    or t4, t4, t2
+    or t4, t4, t3
+    
+# extrair 3 bytes
+    srli t0, t4, 16
+    andi t0, t0, 0xff
+    srli t1, t4, 8
+    andi t1, t1, 0xff
+    andi t2, t4, 0xff
+    
+# converter para hex e armazenar
+    mv a0, t0
+    mv a1, s1
+    jal byte_para_hex
+    addi s1, s1, 2
+    
+    lbu t5, 2(s0)
+    li t6, 61              
+    beq t5, t6, pular_byte2
+    
+    mv a0, t1
+    mv a1, s1
+    jal byte_para_hex
+    addi s1, s1, 2
+pular_byte2:
+    lbu t5, 3(s0)
+    li t6, 61              
+    beq t5, t6, pular_byte3
+    
+    mv a0, t2
+    mv a1, s1
+    jal byte_para_hex
+    addi s1, s1, 2
+pular_byte3:
+    addi s0, s0, 4
+    j processar_blocos  
+fim_processamento:
+    sb zero, 0(s1)
+# imprimir resultado
+    li a7, 4
+    la a0, saida
+    ecall
+# nova linha
+    li a7, 11
+    li a0, 10
+    ecall
+# sair doo programa
+    li a7, 10
+    ecall
+obter_indice_b64:
+    li t5, 61              
+    beq a0, t5, padding_char
+    la t4, tabela_b64
+    li t5, 0  
+loop_busca:
+    lbu t6, 0(t4)
+    beq a0, t6, encontrou
+    addi t4, t4, 1
+    addi t5, t5, 1
+    li t6, 64
+    blt t5, t6, loop_busca
+    
+padding_char:
+    li a0, 0
+    ret  
+encontrou:
+    mv a0, t5
+    ret
+byte_para_hex:
+    srli t4, a0, 4         
+    andi t5, a0, 0xf       
+    
+    la t6, hex_chars
+    add t4, t6, t4
+    lbu t4, 0(t4)
+    sb t4, 0(a1)
+    
+    add t5, t6, t5
+    lbu t5, 0(t5)
+    sb t5, 1(a1)
+    ret
